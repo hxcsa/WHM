@@ -24,8 +24,9 @@ export default function LoginPage() {
         try {
             await signInWithEmailAndPassword(auth, email, password);
             router.push("/");
-        } catch {
-            setError("Authentication failed: Invalid credentials provided");
+        } catch (err: any) {
+            console.error("Login Error:", err);
+            setError(err.message || "Authentication failed: Invalid credentials provided");
             setLoading(false);
         }
     };

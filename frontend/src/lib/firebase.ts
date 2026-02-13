@@ -12,15 +12,20 @@ const firebaseConfig = {
 };
 
 if (process.env.NODE_ENV === "development") {
-    console.log("🔥 Initializing Firebase...");
-    console.log("API Key:", process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? "Defined" : "MISSING");
-    console.log("Auth Domain:", process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ? "Defined" : "MISSING");
+    console.log("🔥 Firebase Environment Check:");
+    console.log("- API Key present:", !!firebaseConfig.apiKey);
+    console.log("- Auth Domain present:", !!firebaseConfig.authDomain);
+    console.log("- Existing apps:", getApps().length);
 }
 
 const app =
     getApps().length === 0 && firebaseConfig.apiKey
         ? initializeApp(firebaseConfig)
         : getApps()[0];
+
+if (process.env.NODE_ENV === "development") {
+    console.log("- App initialized:", !!app);
+}
 
 export const auth = app
     ? getAuth(app)
