@@ -195,37 +195,38 @@ button {
   animation: loginFloatB 12s ease-in-out infinite;
 }
 
-.login-bar {
-  animation: loginBarPulse 2.1s ease-in-out infinite;
-  transform-origin: bottom center;
-}
-
 @keyframes loginFloatA {
+
   0%,
   100% {
     transform: translate3d(0, 0, 0) scale(1);
   }
+
   50% {
     transform: translate3d(16px, 18px, 0) scale(1.06);
   }
 }
 
 @keyframes loginFloatB {
+
   0%,
   100% {
     transform: translate3d(0, 0, 0) scale(1);
   }
+
   50% {
     transform: translate3d(-14px, -20px, 0) scale(1.04);
   }
 }
 
 @keyframes loginBarPulse {
+
   0%,
   100% {
     transform: scaleY(0.78);
     opacity: 0.7;
   }
+
   50% {
     transform: scaleY(1);
     opacity: 1;

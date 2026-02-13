@@ -25,7 +25,10 @@ const app =
 export const auth = app
     ? getAuth(app)
     : ({
-        onAuthStateChanged: () => () => { },
+        onAuthStateChanged: (cb: any) => {
+            cb(null);
+            return () => { };
+        },
         signOut: async () => { },
         currentUser: null,
     } as any);
