@@ -1,0 +1,163 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ============================================
+    // HELPER FUNCTIONS
+    // ============================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserRole() {
+      return request.auth.token.role;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && getUserRole() == 'admin';
+    }
+    
+    function isAccountant() {
+      return isAuthenticated() && (getUserRole() == 'accountant' || isAdmin());
+    }
+    
+    function isStorekeeper() {
+      return isAuthenticated() && (getUserRole() == 'storekeeper' || isAdmin());
+    }
+    
+    function isViewer() {
+      return isAuthenticated();
+    }
+    
+    function belongsToCompany(companyId) {
+      return isAuthenticated() && request.auth.token.company_id == companyId;
+    }
+    
+    function isOwner(companyId) {
+      return belongsToCompany(companyId);
+    }
+    
+    function isDocumentDraft(docId, collection) {
+      return get(/databases/$(database)/documents/$(collection)/$(docId)).data.status == 'DRAFT';
+    }
+    
+    // ============================================
+    // AUDIT LOGS - IMMUTABLE (NO UPDATES/DELETES)
+    // ============================================
+    match /audit_logs/{logId} {
+      allow read: if isAdmin() && belongsToCompany(resource.data.company_id);
+      allow create: if isAuthenticated() && request.resource.data.company_id == request.auth.token.company_id;
+      allow update, delete: if false; // IMMUTABLE
+    }
+    
+    // ============================================
+    // ACCOUNTS (Chart of Accounts)
+    // ============================================
+    match /accounts/{accountId} {
+      allow read: if isViewer() && belongsToCompany(resource.data.company_id);
+      allow create: if isAccountant() && request.resource.data.company_id == request.auth.token.company_id;
+      allow update: if isAccountant() && belongsToCompany(resource.data.company_id);
+      allow delete: if false; // NO DELETES - void instead
+    }
+    
+    // ============================================
+    // JOURNAL ENTRIES
+    // ============================================
+    match /journal_entries/{jeId} {
+      allow read: if isViewer() && belongsToCompany(resource.data.company_id);
+      allow create: if isAccountant() && request.resource.data.company_id == request.auth.token.company_id;
+      // Can only update if DRAFT
+      allow update: if isAccountant() && belongsToCompany(resource.data.company_id) && resource.data.status == 'DRAFT';
+      allow delete: if false; // NO DELETES - void instead
+    }
+    
+    // ============================================
+    // ITEMS (Inventory)
+    // ============================================
+    match /items/{itemId} {
+      allow read: if isViewer() && belongsToCompany(resource.data.company_id);
+      allow create: if (isStorekeeper() || isAccountant()) && 
+                    request.resource.data.company_id == request.auth.token.company_id &&
+                    request.resource.data.name is string;
+      allow update: if (isStorekeeper() || isAccountant()) && 
+                    belongsToCompany(resource.data.company_id) &&
+                    (request.resource.data.name == null || request.resource.data.name is string);
+      allow delete: if false; // NO DELETES
+    }
+    
+    // ============================================
+    // STOCK LEDGER - IMMUTABLE
+    // ============================================
+    match /stock_ledger/{entryId} {
+      allow read: if isViewer() && belongsToCompany(resource.data.company_id);
+      allow create: if isAuthenticated() && request.resource.data.company_id == request.auth.token.company_id;
+      allow update, delete: if false; // IMMUTABLE
+    }
+    
+    // ============================================
+    // WAREHOUSES
+    // ============================================
+    match /warehouses/{warehouseId} {
+      allow read: if isViewer() && belongsToCompany(resource.data.company_id);
+      allow create: if (isStorekeeper() || isAdmin()) && 
+                    request.resource.data.company_id == request.auth.token.company_id &&
+                    request.resource.data.name is string;
+      allow update: if (isStorekeeper() || isAdmin()) && 
+                    belongsToCompany(resource.data.company_id) &&
+                    (request.resource.data.name == null || request.resource.data.name is string);
+      allow delete: if false;
+    }
+    
+    // ============================================
+    // FISCAL PERIODS
+    // ============================================
+    match /fiscal_periods/{periodId} {
+      allow read: if isViewer() && belongsToCompany(resource.data.company_id);
+      allow create: if isAdmin() && request.resource.data.company_id == request.auth.token.company_id;
+      allow update: if isAdmin() && belongsToCompany(resource.data.company_id); // Only admin can close/reopen
+      allow delete: if false;
+    }
+    
+    // ============================================
+    // SEQUENCES (Document Numbering)
+    // ============================================
+    match /sequences/{seqId} {
+      allow read: if isAuthenticated() && belongsToCompany(resource.data.company_id);
+      allow write: if isAuthenticated() && (
+        (request.method == 'create' && request.resource.data.company_id == request.auth.token.company_id) ||
+        (request.method == 'update' && belongsToCompany(resource.data.company_id))
+      );
+    }
+    
+    // ============================================
+    // IDEMPOTENCY KEYS
+    // ============================================
+    match /idempotency_keys/{keyId} {
+      allow read, write: if isAuthenticated() && (
+        (request.method == 'get') || 
+        (request.method == 'create' && request.resource.data.company_id == request.auth.token.company_id) ||
+        (request.method == 'update' && belongsToCompany(resource.data.company_id))
+      );
+    }
+    
+    // ============================================
+    // USERS
+    // ============================================
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || (isAdmin() && belongsToCompany(resource.data.company_id)));
+      allow create: if isAdmin() && request.resource.data.company_id == request.auth.token.company_id;
+      allow update: if (isAdmin() && belongsToCompany(resource.data.company_id)) || request.auth.uid == userId;
+      allow delete: if false;
+    }
+    
+    // ============================================
+    // COMPANIES
+    // ============================================
+    match /companies/{companyId} {
+      allow read: if isAuthenticated() && belongsToCompany(companyId);
+      allow create, update: if isAdmin();
+      allow delete: if false;
+    }
+  }
+}

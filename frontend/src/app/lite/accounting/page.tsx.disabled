@@ -1,0 +1,149 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { fetchWithAuth } from "@/lib/api";
+import { ArrowUpRight, ArrowDownRight, TrendingUp, TrendingDown, DollarSign, Wallet, PieChart, Plus } from "lucide-react";
+import Link from "next/link";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+
+export default function AccountingPage() {
+    const [loading, setLoading] = useState(true);
+    const [data, setData] = useState<any>(null);
+
+    useEffect(() => {
+        const init = async () => {
+            try {
+                const res = await fetchWithAuth("/api/reports/income-statement");
+                if (res.ok) {
+                    const json = await res.json();
+                    setData(json);
+                }
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        const unsub = onAuthStateChanged(auth, u => {
+            if (u) init();
+        });
+        return () => unsub();
+    }, []);
+
+    const formatCurrency = (val: string | number) => {
+        return Number(val).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + " IQD"; // Assuming IQD
+    };
+
+    if (loading) return <div className="p-8 text-center text-slate-400">Loading financials...</div>;
+
+    const netProfit = Number(data?.net_profit || 0);
+    const isProfitable = netProfit >= 0;
+
+    return (
+        <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
+            <div className="flex justify-between items-center">
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-800">Financials</h1>
+                    <p className="text-slate-500">Profit & Loss Snapshot</p>
+                </div>
+                <Link
+                    href="/lite/accounting/expense"
+                    className="bg-rose-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-rose-700 transition-colors flex items-center gap-2 shadow-lg shadow-rose-500/20"
+                >
+                    <Plus size={18} /> Record Expense
+                </Link>
+            </div>
+
+            {/* Main Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between h-40 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 text-emerald-600">
+                        <TrendingUp size={80} />
+                    </div>
+                    <div>
+                        <p className="text-slate-500 text-sm font-bold">REVENUE</p>
+                        <h2 className="text-3xl font-bold text-emerald-600 mt-2">{formatCurrency(data?.revenue || 0)}</h2>
+                    </div>
+                    <div className="text-xs text-slate-400">Total Sales</div>
+                </div>
+
+                <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between h-40 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 text-rose-600">
+                        <TrendingDown size={80} />
+                    </div>
+                    <div>
+                        <p className="text-slate-500 text-sm font-bold">EXPENSES + COGS</p>
+                        <h2 className="text-3xl font-bold text-rose-600 mt-2">
+                            {formatCurrency(Number(data?.expenses || 0) + Number(data?.cogs || 0))}
+                        </h2>
+                    </div>
+                    <div className="text-xs text-slate-400">
+                        COGS: {formatCurrency(data?.cogs || 0)} • Exp: {formatCurrency(data?.expenses || 0)}
+                    </div>
+                </div>
+
+                <div className={`p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between h-40 text-white relative overflow-hidden ${is profitable ? 'bg-indigo-600' : 'bg-slate-700'}`}>
+                <div className="absolute top-0 right-0 p-4 opacity-20">
+                    <Wallet size={80} />
+                </div>
+                <div>
+                    <p className="text-indigo-200 text-sm font-bold">NET PROFIT</p>
+                    <h2 className="text-3xl font-bold mt-2">{formatCurrency(netProfit)}</h2>
+                </div>
+                <div className="text-xs text-indigo-200">
+                    GP: {formatCurrency(data?.gross_profit || 0)}
+                </div>
+            </div>
+        </div>
+
+            {/* Breakdown */ }
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+            <h3 className="font-bold text-slate-700 mb-4 flex items-center gap-2">
+                <ArrowUpRight size={18} className="text-emerald-500" /> Revenue Breakdown
+            </h3>
+            <div className="space-y-3">
+                {data?.details?.revenue?.length === 0 ? (
+                    <p className="text-slate-400 text-sm">No revenue recorded.</p>
+                ) : (
+                    data?.details?.revenue?.map((item: any, i: number) => (
+                        <div key={i} className="flex justify-between items-center text-sm p-3 bg-emerald-50/50 rounded-xl">
+                            <span className="font-medium text-emerald-900">{item.name}</span>
+                            <span className="font-bold text-emerald-700">{formatCurrency(item.amount)}</span>
+                        </div>
+                    ))
+                )}
+            </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+            <h3 className="font-bold text-slate-700 mb-4 flex items-center gap-2">
+                <ArrowDownRight size={18} className="text-rose-500" /> Expense Breakdown
+            </h3>
+            <div className="space-y-3">
+                {data?.details?.expenses?.length === 0 && data?.details?.cogs?.length === 0 ? (
+                    <p className="text-slate-400 text-sm">No expenses recorded.</p>
+                ) : (
+                    <>
+                        {data?.details?.cogs?.map((item: any, i: number) => (
+                            <div key={`cogs-${i}`} className="flex justify-between items-center text-sm p-3 bg-amber-50/50 rounded-xl">
+                                <span className="font-medium text-amber-900">{item.name} (COGS)</span>
+                                <span className="font-bold text-amber-700">{formatCurrency(item.amount)}</span>
+                            </div>
+                        ))}
+                        {data?.details?.expenses?.map((item: any, i: number) => (
+                            <div key={`exp-${i}`} className="flex justify-between items-center text-sm p-3 bg-rose-50/50 rounded-xl">
+                                <span className="font-medium text-rose-900">{item.name}</span>
+                                <span className="font-bold text-rose-700">{formatCurrency(item.amount)}</span>
+                            </div>
+                        ))}
+                    </>
+                )}
+            </div>
+        </div>
+    </div>
+        </div >
+    );
+}

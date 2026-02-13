@@ -1,0 +1,71 @@
+
+> frontend@0.1.0 build
+> next build
+
+▲ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 6.5s
+  Running TypeScript ...
+  Collecting page data using 11 workers ...
+  Generating static pages using 11 workers (0/50) ...
+  Generating static pages using 11 workers (12/50) 
+  Generating static pages using 11 workers (24/50) 
+  Generating static pages using 11 workers (37/50) 
+✓ Generating static pages using 11 workers (50/50) in 1130.1ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /accounting
+├ ○ /accounting/categories
+├ ○ /accounting/coa
+├ ○ /accounting/expenses
+├ ○ /accounting/general-ledger
+├ ○ /accounting/journals
+├ ○ /accounting/statements
+├ ○ /accounting/trial-balance
+├ ○ /activity
+├ ○ /admin/employees
+├ ○ /admin/settings
+├ ○ /assets
+├ ○ /dashboard
+├ ○ /inventory
+├ ○ /lite
+├ ○ /lite/accounting/expense
+├ ○ /lite/inventory
+├ ○ /lite/inventory/new
+├ ○ /lite/operations/in
+├ ○ /lite/operations/out
+├ ○ /login
+├ ○ /purchasing
+├ ○ /purchasing/bills
+├ ○ /purchasing/orders
+├ ○ /purchasing/payments
+├ ○ /purchasing/suppliers
+├ ○ /reports
+├ ○ /sales
+├ ○ /sales/credit-notes
+├ ○ /sales/customers
+├ ○ /sales/invoices
+├ ○ /sales/invoices/new
+├ ○ /sales/receipts
+├ ○ /schedule
+├ ○ /users
+├ ○ /warehouse
+├ ○ /warehouse/dashboard
+├ ○ /warehouse/intents
+├ ○ /warehouse/inventory/products
+├ ○ /warehouse/inventory/uoms
+├ ○ /warehouse/inventory/warehouses
+├ ○ /warehouse/list
+├ ○ /warehouse/movements/adjustments
+├ ○ /warehouse/movements/inbound
+├ ○ /warehouse/movements/outbound
+└ ○ /warehouse/movements/transfers
+
+
+○  (Static)  prerendered as static content
+

@@ -1,0 +1,233 @@
+@import "tailwindcss";
+
+@theme {
+  --font-heading: "Manrope", "Cairo", sans-serif;
+  --font-body: "DM Sans", "Cairo", sans-serif;
+}
+
+:root {
+  --bg: #f3f4f6;
+  --bg-soft: #f8fafc;
+  --surface: #ffffff;
+  --surface-2: #f9fafb;
+  --line: #e5e7eb;
+  --ink: #101828;
+  --text: #344054;
+  --muted: #667085;
+  --good: #16a34a;
+  --warn: #d97706;
+  --bad: #dc2626;
+  --ring: rgba(16, 24, 40, 0.08);
+
+  /* Legacy token compatibility for existing pages */
+  --accent: #3b82f6;
+  --accent-thin: #dbeafe;
+  --ink-soft: #64748b;
+  --ink-thin: #e2e8f0;
+  --success: #16a34a;
+  --success-thin: #dcfce7;
+  --warning: #d97706;
+  --warning-thin: #fef3c7;
+  --danger: #dc2626;
+  --danger-thin: #fee2e2;
+  --primary: #1e3a8a;
+}
+
+[dir="rtl"] {
+  text-align: right;
+  font-family: "Cairo", sans-serif;
+}
+
+* {
+  border-color: var(--line);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 15% -10%, #ffffff 0%, rgba(255, 255, 255, 0) 45%),
+    radial-gradient(circle at 90% 0%, #f5f7ff 0%, rgba(245, 247, 255, 0) 35%),
+    var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
+}
+
+a {
+  color: inherit;
+}
+
+.enterprise-card,
+.surface-card {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: 0 1px 2px 0 rgba(16, 24, 40, 0.03), 0 12px 24px -18px rgba(16, 24, 40, 0.22);
+}
+
+.enterprise-modal {
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: 0 20px 40px -20px rgba(15, 23, 42, 0.35);
+}
+
+.enterprise-input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  padding: 0.7rem 0.9rem;
+  font-size: 0.95rem;
+  line-height: 1.35rem;
+}
+
+.enterprise-input:focus {
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.14);
+}
+
+.opengate-button-primary {
+  background: #2563eb;
+  color: #fff;
+  border: 1px solid #2563eb;
+}
+
+.opengate-button-primary:hover {
+  background: #1d4ed8;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.enterprise-table th,
+table thead th {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.enterprise-table td,
+table tbody td {
+  color: var(--text);
+}
+
+input,
+select,
+textarea {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #cbd5e1;
+  box-shadow: 0 0 0 4px var(--ring);
+}
+
+button {
+  transition: all 0.15s ease;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #cbd5e1;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.login-grid-overlay {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(circle at 50% 50%, black 35%, transparent 100%);
+}
+
+.login-orb-a {
+  animation: loginFloatA 10s ease-in-out infinite;
+}
+
+.login-orb-b {
+  animation: loginFloatB 12s ease-in-out infinite;
+}
+
+.login-bar {
+  animation: loginBarPulse 2.1s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+@keyframes loginFloatA {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(16px, 18px, 0) scale(1.06);
+  }
+}
+
+@keyframes loginFloatB {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-14px, -20px, 0) scale(1.04);
+  }
+}
+
+@keyframes loginBarPulse {
+  0%,
+  100% {
+    transform: scaleY(0.78);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}

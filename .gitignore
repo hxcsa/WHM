@@ -1,0 +1,60 @@
+# Node
+node_modules/
+.next/
+dist/
+build/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+ENV/
+.env
+
+# Firebase & Secrets
+service_account.json
+backend/service_account.json
+*.js.map
+
+# Backend scripts
+backend/.env
+backend/massive_seed.py
+backend/seed_data.py
+backend/seed_accounting_data.py
+backend/sync_claims.py
+backend/repair_specific_admin.py
+backend/list_auth_users.py
+backend/debug_*.py
+backend/fix_data.py
+backend/backfill_ledger.py
+
+# OS
+.DS_Store
+Thumbs.db
+~$*
+.idea/
+.vscode/
+
+# Agentic
+.gemini/
+.agent/
+brain/
+
+# Python extras
+.venv/
+.python-version
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log

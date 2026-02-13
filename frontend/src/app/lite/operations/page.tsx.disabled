@@ -1,0 +1,94 @@
+"use client";
+
+import Link from "next/link";
+import { ArrowUpRight, ArrowDownRight, History, CheckCircle2, Factory } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { fetchWithAuth } from "@/lib/api";
+
+export default function OperationsPage() {
+    const searchParams = useSearchParams();
+    const success = searchParams.get("success");
+    const [recentMoves, setRecentMoves] = useState<any[]>([]);
+
+    useEffect(() => {
+        // Fetch recent stock history
+        fetchWithAuth("/api/inventory/history?limit=5").then(res => res.json()).then(data => {
+            if (Array.isArray(data)) setRecentMoves(data);
+        });
+    }, []);
+
+    return (
+        <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
+            <div>
+                <h1 className="text-2xl font-bold text-slate-800">Operations</h1>
+                <p className="text-slate-500">Manage inventory flow.</p>
+            </div>
+
+            {success && (
+                <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl flex items-center gap-3 text-emerald-700 animate-in slide-in-from-top-2">
+                    <CheckCircle2 size={24} />
+                    <div>
+                        <p className="font-bold">Success!</p>
+                        <p className="text-sm">
+                            {success === 'in' ? 'Stock received successfully.' : 'Sale recorded successfully.'}
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Link href="/lite/operations/in" className="group bg-white p-8 rounded-3xl shadow-sm border border-slate-100 hover:border-indigo-200 hover:shadow-md transition-all flex flex-col items-center text-center gap-4 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+                    <div className="p-4 bg-indigo-50 text-indigo-600 rounded-2xl group-hover:scale-110 transition-transform">
+                        <ArrowDownRight size={32} />
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-800">Stock In (Purchase)</h2>
+                        <p className="text-slate-500 text-sm mt-1">Add items to inventory from suppliers.</p>
+                    </div>
+                </Link>
+
+                <Link href="/lite/operations/out" className="group bg-white p-8 rounded-3xl shadow-sm border border-slate-100 hover:border-emerald-200 hover:shadow-md transition-all flex flex-col items-center text-center gap-4 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+                    <div className="p-4 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:scale-110 transition-transform">
+                        <ArrowUpRight size={32} />
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-800">Stock Out (Sale)</h2>
+                        <p className="text-slate-500 text-sm mt-1">Sell items to customers.</p>
+                    </div>
+                </Link>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div className="p-6 border-b border-slate-100 flex items-center gap-2">
+                    <History size={18} className="text-slate-400" />
+                    <h3 className="font-bold text-slate-700">Recent Activity</h3>
+                </div>
+                <div className="divide-y divide-slate-100">
+                    {recentMoves.length === 0 ? (
+                        <div className="p-8 text-center text-slate-400 text-sm">No recent history</div>
+                    ) : (
+                        recentMoves.map((move: any) => (
+                            <div key={move.id} className="p-4 flex justify-between items-center text-sm">
+                                <div className="flex items-center gap-3">
+                                    <div className={`p-2 rounded-lg ${Number(move.quantity) > 0 ? 'bg-indigo-50 text-indigo-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                                        {Number(move.quantity) > 0 ? <ArrowDownRight size={16} /> : <ArrowUpRight size={16} />}
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-slate-700">{move.description || "Movement"}</p>
+                                        <p className="text-xs text-slate-400">{new Date(move.timestamp).toLocaleDateString()}</p>
+                                    </div>
+                                </div>
+                                <div className={`font-bold font-mono ${Number(move.quantity) > 0 ? 'text-indigo-600' : 'text-emerald-600'}`}>
+                                    {Number(move.quantity) > 0 ? '+' : ''}{Number(move.quantity)}
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}

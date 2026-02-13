@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: opengate-erp-backend
+    env: docker
+    dockerContext: .
+    dockerfilePath: backend/Dockerfile
+    plan: free
+    region: oregon
+    envVars:
+      - key: FIREBASE_SERVICE_ACCOUNT
+        sync: false # User will paste this in Render Dashboard
+      - key: PORT
+        value: 8000
