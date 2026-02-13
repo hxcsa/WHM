@@ -15,7 +15,7 @@ async function getAuthToken(forceRefresh = false): Promise<string | null> {
 
     tokenPromise = user
         .getIdToken(forceRefresh)
-        .then((token) => token ?? null)
+        .then((token: string) => token ?? null)
         .catch(() => null)
         .finally(() => {
             tokenPromise = null;

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Plus, Search, FileText, ArrowLeft, RefreshCw, Filter } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { auth } from "@/lib/firebase";
+import { User } from "firebase/auth";
 
 export default function CreditNotesPage() {
     const { t } = useLanguage();
@@ -22,7 +23,7 @@ export default function CreditNotesPage() {
     });
 
     useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged((user) => {
+        const unsubscribe = auth.onAuthStateChanged((user: User | null) => {
             if (user) {
                 fetchNotes(user);
                 fetchCustomers(user);
