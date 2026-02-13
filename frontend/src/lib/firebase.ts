@@ -22,5 +22,12 @@ const app =
         ? initializeApp(firebaseConfig)
         : getApps()[0];
 
-export const auth = app ? getAuth(app) : ({} as any);
+export const auth = app
+    ? getAuth(app)
+    : ({
+        onAuthStateChanged: () => () => { },
+        signOut: async () => { },
+        currentUser: null,
+    } as any);
+
 export default app;
