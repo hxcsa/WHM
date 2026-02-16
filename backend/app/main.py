@@ -30,7 +30,7 @@ async def startup_event():
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to Warehouse Management API (Firebase)"}
+    return {"message": "Welcome to OpenGate Warehouse API v1.0.1"}
 
 
 # Mount the single monolithic router
