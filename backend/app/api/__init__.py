@@ -1804,6 +1804,7 @@ def create_invoice(data: dict, user: dict = Depends(get_current_user)):
             if payment_status == "paid"
             else data.get("status", "issued"),
             "issue_date": data.get("issue_date") or datetime.now().isoformat(),
+            "due_date": data.get("due_date"),
             "created_by": user.get("uid"),
             "created_at": firestore.SERVER_TIMESTAMP,
         }
