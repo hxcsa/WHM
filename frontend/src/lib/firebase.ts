@@ -11,29 +11,19 @@ const firebaseConfig = {
     measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-const isBrowser = typeof window !== "undefined";
+// Only initialize Firebase when the API key is present.
+// During Vercel builds or if env vars are missing, `app` will be null
+// and we fall back to a safe mock that redirects to login.
+const app =
+    firebaseConfig.apiKey && getApps().length === 0
+        ? initializeApp(firebaseConfig)
+        : getApps()[0] || null;
 
-// We only want to skip initialization during the build phase (Vercel) if keys are missing.
-// In the browser, we should always try to initialize so real errors are caught.
-const shouldInitialize = !!firebaseConfig.apiKey || isBrowser;
+const authMock = {
+    onAuthStateChanged: (cb: any) => { cb(null); return () => { }; },
+    signOut: async () => { },
+    currentUser: null,
+} as any;
 
-const app = shouldInitialize
-    ? (getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0])
-    : null;
-
-if (isBrowser && !firebaseConfig.apiKey) {
-    console.error("❌ Firebase API Key is missing! Check your .env.local file and restart the dev server.");
-}
-
-export const auth = app
-    ? getAuth(app)
-    : ({
-        onAuthStateChanged: (cb: any) => {
-            cb(null);
-            return () => { };
-        },
-        signOut: async () => { },
-        currentUser: null,
-    } as any);
-
+export const auth = app ? getAuth(app) : authMock;
 export default app;
