@@ -543,6 +543,7 @@ def get_dashboard_insights(user: dict = Depends(get_current_user)):
 
 
 # ===================== PRODUCTS =====================
+@router.get("/items")
 @router.get("/products")
 def list_products(
     search: Optional[str] = None,
@@ -1644,6 +1645,7 @@ async def add_customer_payment(
 
 
 # ===================== SALES / INVOICES =====================
+@router.get("/sales/invoices")
 @router.get("/invoices")
 def list_invoices(
     status: Optional[str] = None,
@@ -1708,6 +1710,7 @@ def list_invoices(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post("/sales/invoices")
 @router.post("/invoices")
 def create_invoice(data: dict, user: dict = Depends(get_current_user)):
     """Create a new sales invoice."""
@@ -1875,6 +1878,7 @@ def create_invoice(data: dict, user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/sales/invoices/{invoice_id}")
 @router.get("/invoices/{invoice_id}")
 def get_invoice(invoice_id: str, user: dict = Depends(get_current_user)):
     """Get invoice details."""
@@ -1887,6 +1891,7 @@ def get_invoice(invoice_id: str, user: dict = Depends(get_current_user)):
     return {"id": doc.id, **doc.to_dict()}
 
 
+@router.post("/sales/invoices/{invoice_id}/return")
 @router.post("/invoices/{invoice_id}/return")
 def process_return(invoice_id: str, data: dict, user: dict = Depends(get_current_user)):
     """Process a return for an invoice."""
