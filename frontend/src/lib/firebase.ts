@@ -11,13 +11,14 @@ const firebaseConfig = {
     measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-// Only initialize Firebase when the API key is present.
-// During Vercel builds or if env vars are missing, `app` will be null
-// and we fall back to a safe mock that redirects to login.
+// Only initialize Firebase when the API key is actually present.
 const app =
     firebaseConfig.apiKey && getApps().length === 0
         ? initializeApp(firebaseConfig)
         : getApps()[0] || null;
+
+// Export a flag so consumers know if Firebase is real or a stub.
+export const isFirebaseConfigured = !!app;
 
 const authMock = {
     onAuthStateChanged: (cb: any) => { cb(null); return () => { }; },

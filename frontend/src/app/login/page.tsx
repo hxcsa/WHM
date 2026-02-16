@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth, isFirebaseConfigured } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { Loader2, ShieldCheck, Lock, Mail, ArrowRight } from "lucide-react";
 
@@ -17,6 +17,10 @@ export default function LoginPage() {
         e.preventDefault();
         if (!agree) {
             setError("Please agree to the security protocols");
+            return;
+        }
+        if (!isFirebaseConfigured) {
+            setError("Firebase is not configured. Please add NEXT_PUBLIC_FIREBASE_API_KEY to environment variables and redeploy.");
             return;
         }
         setError("");
