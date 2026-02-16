@@ -22,7 +22,10 @@ app.add_middleware(GZipMiddleware, minimum_size=500)
 
 @app.on_event("startup")
 async def startup_event():
-    init_firebase()
+    try:
+        init_firebase()
+    except Exception as e:
+        print(f"Failed to initialize Firebase on startup: {e}")
 
 
 @app.get("/")
