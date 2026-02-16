@@ -11,20 +11,18 @@ const firebaseConfig = {
     measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-if (process.env.NODE_ENV === "development") {
-    console.log("🔥 Firebase Environment Check:");
-    console.log("- API Key present:", !!firebaseConfig.apiKey);
-    console.log("- Auth Domain present:", !!firebaseConfig.authDomain);
-    console.log("- Existing apps:", getApps().length);
-}
+const isBrowser = typeof window !== "undefined";
 
-const app =
-    getApps().length === 0 && firebaseConfig.apiKey
-        ? initializeApp(firebaseConfig)
-        : getApps()[0];
+// We only want to skip initialization during the build phase (Vercel) if keys are missing.
+// In the browser, we should always try to initialize so real errors are caught.
+const shouldInitialize = !!firebaseConfig.apiKey || isBrowser;
 
-if (process.env.NODE_ENV === "development") {
-    console.log("- App initialized:", !!app);
+const app = shouldInitialize
+    ? (getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0])
+    : null;
+
+if (isBrowser && !firebaseConfig.apiKey) {
+    console.error("❌ Firebase API Key is missing! Check your .env.local file and restart the dev server.");
 }
 
 export const auth = app
