@@ -312,20 +312,20 @@ export default function ProductsPage() {
             </div>
 
             {/* Header */}
-            <div className="enterprise-card rounded-3xl bg-gradient-to-r from-slate-900 to-slate-700 p-6 text-white text-left">
+            <div className="enterprise-card rounded-2xl sm:rounded-3xl bg-gradient-to-r from-slate-900 to-slate-700 p-4 sm:p-6 text-white text-left">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <p className="text-xs uppercase tracking-[0.16em] text-slate-300">Materials & Stock</p>
-                        <h1 className="mt-2 text-3xl font-bold text-white">Product Catalog</h1>
-                        <p className="mt-1 text-sm text-slate-200">Central database for all items, variants, and base pricing.</p>
+                        <p className="text-[10px] sm:text-xs uppercase tracking-[0.16em] text-slate-300">Materials & Stock</p>
+                        <h1 className="mt-1 sm:mt-2 text-2xl sm:text-3xl font-bold text-white">Product Catalog</h1>
+                        <p className="mt-1 text-xs sm:text-sm text-slate-200">Central database for all items, variants, and base pricing.</p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 sm:gap-3">
                         <button
                             onClick={handleExport}
-                            className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+                            className="inline-flex items-center gap-1.5 sm:gap-2 rounded-xl border border-white/20 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white transition hover:bg-white/10"
                         >
                             <Download size={14} />
-                            Export
+                            <span className="hidden sm:inline">Export</span>
                         </button>
                         <button
                             onClick={() => {
@@ -344,7 +344,7 @@ export default function ProductsPage() {
                                 setInboundNotes("");
                                 setShowModal(true);
                             }}
-                            className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-bold text-slate-900 shadow-sm transition hover:bg-slate-50"
+                            className="inline-flex items-center gap-1.5 sm:gap-2 rounded-xl bg-white px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-900 shadow-sm transition hover:bg-slate-50"
                         >
                             <Plus size={14} />
                             Add Product
@@ -356,7 +356,7 @@ export default function ProductsPage() {
             <ProductSubTabs />
 
             {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                     <input
@@ -364,32 +364,33 @@ export default function ProductsPage() {
                         placeholder="Search products..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 bg-white text-sm focus:border-slate-300 focus:ring-4 focus:ring-slate-100"
+                        className="w-full pl-10 pr-4 py-2.5 sm:py-2 rounded-xl border border-slate-200 bg-white text-sm focus:border-slate-300 focus:ring-4 focus:ring-slate-100"
                     />
                 </div>
                 <button
                     onClick={() => setShowLowStock(!showLowStock)}
-                    className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition ${showLowStock ? 'bg-rose-50 border-rose-200 text-rose-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                    className={`inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2.5 sm:py-2 text-sm font-medium transition ${showLowStock ? 'bg-rose-50 border-rose-200 text-rose-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                         }`}
                 >
                     <AlertCircle size={14} />
-                    Low Stock Risk
+                    <span className="hidden sm:inline">Low Stock Risk</span>
+                    <span className="sm:hidden">Low Stock</span>
                 </button>
             </div>
 
             {/* Products Table */}
             <div className="enterprise-card overflow-hidden bg-white">
-                <div className="overflow-x-auto">
-                    <table className="enterprise-table w-full">
+                <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+                    <table className="enterprise-table w-full min-w-[700px]">
                         <thead>
                             <tr className="border-b border-slate-100 bg-slate-50/50">
-                                <th className="px-6 py-4 text-left">Product</th>
-                                <th className="px-6 py-4 text-left">SKU</th>
-                                <th className="px-6 py-4 text-left">Stock</th>
-                                <th className="px-6 py-4 text-left">Cost</th>
-                                <th className="px-6 py-4 text-left">Price</th>
-                                <th className="px-6 py-4 text-left">Type</th>
-                                <th className="px-6 py-4 text-right">Actions</th>
+                                <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs">Product</th>
+                                <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs">SKU</th>
+                                <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs">Stock</th>
+                                <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs">Cost</th>
+                                <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs">Price</th>
+                                <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs hidden sm:table-cell">Type</th>
+                                <th className="px-4 sm:px-6 py-3 sm:py-4 text-right text-xs">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
@@ -400,44 +401,44 @@ export default function ProductsPage() {
 
                                 return (
                                     <tr key={product.id} className="hover:bg-slate-50/50 transition-colors">
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3 text-left">
-                                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
-                                                    <Package size={20} />
+                                        <td className="px-4 sm:px-6 py-3 sm:py-4">
+                                            <div className="flex items-center gap-2 sm:gap-3 text-left">
+                                                <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600 flex-shrink-0">
+                                                    <Package size={16} className="sm:w-5 sm:h-5" />
                                                 </div>
-                                                <div>
-                                                    <p className="text-sm font-bold text-slate-900">{product.name}</p>
-                                                    <p className="text-xs text-slate-400 capitalize">{product.unit || 'piece'}</p>
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-bold text-slate-900 truncate">{product.name}</p>
+                                                    <p className="text-[10px] sm:text-xs text-slate-400 capitalize">{product.unit || 'piece'}</p>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-600">{product.sku}</code>
+                                        <td className="px-4 sm:px-6 py-3 sm:py-4">
+                                            <code className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] sm:text-xs font-medium text-slate-600">{product.sku}</code>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2">
-                                                <span className={`text-sm font-black ${isLowStock ? 'text-rose-600' : 'text-slate-700'
+                                        <td className="px-4 sm:px-6 py-3 sm:py-4">
+                                            <div className="flex items-center gap-1.5 sm:gap-2">
+                                                <span className={`text-xs sm:text-sm font-black ${isLowStock ? 'text-rose-600' : 'text-slate-700'
                                                     }`}>
                                                     {qty}
                                                 </span>
-                                                {isLowStock && <AlertCircle size={14} className="text-rose-500" />}
+                                                {isLowStock && <AlertCircle size={12} className="text-rose-500 sm:w-4 sm:h-4" />}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-sm text-slate-500 text-left">
+                                        <td className="px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-slate-500 text-left">
                                             {formatCurrency(product.cost_price)}
                                         </td>
-                                        <td className="px-6 py-4 text-sm font-bold text-slate-900 text-left">
+                                        <td className="px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-bold text-slate-900 text-left">
                                             {formatCurrency(product.selling_price)}
                                         </td>
-                                        <td className="px-6 py-4 text-left">
-                                            <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${product.pricing_type === 'fixed'
+                                        <td className="px-4 sm:px-6 py-3 sm:py-4 text-left hidden sm:table-cell">
+                                            <span className={`inline-flex rounded-full px-2 py-0.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider ${product.pricing_type === 'fixed'
                                                     ? 'bg-blue-100 text-blue-700'
                                                     : 'bg-purple-100 text-purple-700'
                                                 }`}>
                                                 {product.pricing_type}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-right">
+                                        <td className="px-4 sm:px-6 py-3 sm:py-4 text-right">
                                             <div className="flex items-center justify-end gap-1">
                                                 <button
                                                     onClick={() => {
@@ -456,13 +457,15 @@ export default function ProductsPage() {
                                                         setInboundNotes("");
                                                         setShowModal(true);
                                                     }}
-                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-900 transition"
+                                                    className="inline-flex h-9 w-9 sm:h-8 sm:w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-900 transition touch-target"
+                                                    aria-label="Edit product"
                                                 >
                                                     <Edit2 size={14} />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(product.id)}
-                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition"
+                                                    className="inline-flex h-9 w-9 sm:h-8 sm:w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition touch-target"
+                                                    aria-label="Delete product"
                                                 >
                                                     <Trash2 size={14} />
                                                 </button>
@@ -477,8 +480,8 @@ export default function ProductsPage() {
 
                 {filteredProducts.length === 0 && (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
-                        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-50 text-slate-300">
-                            <Package size={32} />
+                        <div className="mb-4 flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-slate-50 text-slate-300">
+                            <Package size={24} className="sm:w-8 sm:h-8" />
                         </div>
                         <p className="text-sm font-semibold text-slate-900">No products discovered</p>
                         <p className="mt-1 text-xs text-slate-500">Try adjusting your search or filters.</p>
@@ -488,24 +491,24 @@ export default function ProductsPage() {
 
             {/* Add/Edit Modal */}
             {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
-                    <div className="enterprise-card max-h-[90vh] w-full max-w-lg overflow-y-auto bg-white p-0 shadow-2xl">
-                        <div className="flex items-center justify-between border-b border-slate-100 p-6">
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 sm:p-4 backdrop-blur-sm">
+                    <div className="enterprise-card w-full max-w-lg max-h-[90vh] overflow-y-auto bg-white shadow-2xl rounded-t-2xl sm:rounded-2xl">
+                        <div className="flex items-center justify-between border-b border-slate-100 p-4 sm:p-6 sticky top-0 bg-white z-10">
                             <div>
-                                <h2 className="text-xl font-bold text-slate-900">
+                                <h2 className="text-lg sm:text-xl font-bold text-slate-900">
                                     {editingProduct ? "Revise Product" : "New Inventory Item"}
                                 </h2>
-                                <p className="text-xs text-slate-400">Configure specifications and pricing.</p>
+                                <p className="text-[10px] sm:text-xs text-slate-400">Configure specifications and pricing.</p>
                             </div>
-                            <button onClick={() => setShowModal(false)} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-900 transition">
+                            <button onClick={() => setShowModal(false)} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-900 transition touch-target">
                                 <X size={20} />
                             </button>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="p-6 space-y-5 text-left">
+                        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-5 text-left">
                             <div className="space-y-4">
                                 <div>
-                                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Product Name *</label>
+                                    <label className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500">Product Name *</label>
                                     <input
                                         type="text"
                                         value={formData.name}
@@ -513,14 +516,15 @@ export default function ProductsPage() {
                                             setFormData({ ...formData, name: e.target.value });
                                             if (errors.name) setErrors({ ...errors, name: '' });
                                         }}
-                                        className={`mt-1.5 w-full p-2.5 text-sm ${errors.name ? 'border-rose-300' : ''}`}
+                                        className={`mt-1.5 w-full p-3 sm:p-2.5 text-sm ${errors.name ? 'border-rose-300' : ''}`}
+                                        placeholder="Enter product name"
                                     />
                                     {errors.name && <p className="mt-1 text-xs font-medium text-rose-500">{errors.name}</p>}
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">SKU Code *</label>
+                                        <label className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500">SKU Code *</label>
                                         <input
                                             type="text"
                                             value={formData.sku}
@@ -529,16 +533,17 @@ export default function ProductsPage() {
                                                 if (errors.sku) setErrors({ ...errors, sku: '' });
                                             }}
                                             disabled={!!editingProduct}
-                                            className={`mt-1.5 w-full p-2.5 text-sm ${editingProduct ? 'bg-slate-50 text-slate-500' : ''} ${errors.sku ? 'border-rose-300' : ''}`}
+                                            className={`mt-1.5 w-full p-3 sm:p-2.5 text-sm ${editingProduct ? 'bg-slate-50 text-slate-500' : ''} ${errors.sku ? 'border-rose-300' : ''}`}
+                                            placeholder="Enter SKU"
                                         />
                                         {errors.sku && <p className="mt-1 text-xs font-medium text-rose-500">{errors.sku}</p>}
                                     </div>
                                     <div>
-                                        <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Unit of Measure</label>
+                                        <label className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500">Unit of Measure</label>
                                         <select
                                             value={formData.unit}
                                             onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                                            className="mt-1.5 w-full p-2.5 text-sm"
+                                            className="mt-1.5 w-full p-3 sm:p-2.5 text-sm"
                                         >
                                             <option value="piece">Piece</option>
                                             <option value="kg">KG</option>
@@ -548,9 +553,9 @@ export default function ProductsPage() {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Cost Price (IQD) *</label>
+                                        <label className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500">Cost Price (IQD) *</label>
                                         <input
                                             type="number"
                                             step="0.01"
@@ -560,12 +565,13 @@ export default function ProductsPage() {
                                                 setFormData({ ...formData, cost_price: e.target.value });
                                                 if (errors.cost_price) setErrors({ ...errors, cost_price: '' });
                                             }}
-                                            className={`mt-1.5 w-full p-2.5 text-sm ${errors.cost_price ? 'border-rose-300' : ''}`}
+                                            className={`mt-1.5 w-full p-3 sm:p-2.5 text-sm ${errors.cost_price ? 'border-rose-300' : ''}`}
+                                            placeholder="0.00"
                                         />
                                         {errors.cost_price && <p className="mt-1 text-xs font-medium text-rose-500">{errors.cost_price}</p>}
                                     </div>
                                     <div>
-                                        <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Sale Price (IQD) *</label>
+                                        <label className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500">Sale Price (IQD) *</label>
                                         <input
                                             type="number"
                                             step="0.01"
@@ -575,7 +581,8 @@ export default function ProductsPage() {
                                                 setFormData({ ...formData, selling_price: e.target.value });
                                                 if (errors.selling_price) setErrors({ ...errors, selling_price: '' });
                                             }}
-                                            className={`mt-1.5 w-full p-2.5 text-sm ${(errors.selling_price || hasPriceBelowCost) ? 'border-rose-300' : ''}`}
+                                            className={`mt-1.5 w-full p-3 sm:p-2.5 text-sm ${(errors.selling_price || hasPriceBelowCost) ? 'border-rose-300' : ''}`}
+                                            placeholder="0.00"
                                         />
                                         {(errors.selling_price || hasPriceBelowCost) && (
                                             <p className="mt-1 text-xs font-medium text-rose-500">{errors.selling_price || "Margin risk: Sale price < Cost."}</p>
@@ -583,23 +590,24 @@ export default function ProductsPage() {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Minimum Stock Level</label>
+                                        <label className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500">Minimum Stock Level</label>
                                         <input
                                             type="number"
                                             min="0"
                                             value={formData.min_stock_level}
                                             onChange={(e) => setFormData({ ...formData, min_stock_level: e.target.value })}
-                                            className="mt-1.5 w-full p-2.5 text-sm"
+                                            className="mt-1.5 w-full p-3 sm:p-2.5 text-sm"
+                                            placeholder="0"
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Pricing Logic</label>
+                                        <label className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500">Pricing Logic</label>
                                         <select
                                             value={formData.pricing_type}
                                             onChange={(e) => setFormData({ ...formData, pricing_type: e.target.value })}
-                                            className="mt-1.5 w-full p-2.5 text-sm"
+                                            className="mt-1.5 w-full p-3 sm:p-2.5 text-sm"
                                         >
                                             <option value="fixed">Fixed Official Price</option>
                                             <option value="negotiable">Open for Negotiation</option>
@@ -608,16 +616,16 @@ export default function ProductsPage() {
                                 </div>
 
                                 {editingProduct && (
-                                    <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4 space-y-3">
+                                    <div className="rounded-xl sm:rounded-2xl border border-emerald-100 bg-emerald-50/50 p-3 sm:p-4 space-y-3">
                                         <div className="flex items-center gap-2">
                                             <ArrowDownCircle size={14} className="text-emerald-600" />
-                                            <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-800">Quick Stock Inbound</h3>
+                                            <h3 className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-emerald-800">Quick Stock Inbound</h3>
                                         </div>
-                                        <div className="flex items-center justify-between text-[11px] font-medium text-emerald-700">
+                                        <div className="flex items-center justify-between text-[10px] sm:text-[11px] font-medium text-emerald-700">
                                             <span>Current Availability:</span>
                                             <span>{editingProduct.current_qty} {editingProduct.unit}</span>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-2">
+                                        <div className="flex gap-2">
                                             <input
                                                 type="number"
                                                 min="0.01"
@@ -625,33 +633,33 @@ export default function ProductsPage() {
                                                 value={inboundQty}
                                                 onChange={(e) => setInboundQty(e.target.value)}
                                                 placeholder="Add qty..."
-                                                className="bg-white p-2 text-sm border-emerald-100 placeholder:text-emerald-300"
+                                                className="flex-1 bg-white p-2 sm:p-2 text-sm border-emerald-100 placeholder:text-emerald-300"
                                             />
                                             <button
                                                 type="button"
                                                 onClick={handleQuickInbound}
                                                 disabled={inboundSubmitting}
-                                                className="rounded-xl bg-emerald-600 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-50"
+                                                className="rounded-xl bg-emerald-600 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-50 px-4"
                                             >
-                                                {inboundSubmitting ? "Processing..." : "Commit Stock"}
+                                                {inboundSubmitting ? "..." : "Add"}
                                             </button>
                                         </div>
                                     </div>
                                 )}
                             </div>
 
-                            <div className="flex gap-3 pt-2">
+                            <div className="flex gap-3 pt-2 pb-safe">
                                 <button
                                     type="button"
                                     onClick={() => setShowModal(false)}
-                                    className="flex-1 rounded-xl border border-slate-200 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-50"
+                                    className="flex-1 rounded-xl border border-slate-200 py-3 sm:py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-50"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={!isFormValid() || submitting}
-                                    className="flex-1 rounded-xl bg-slate-900 py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-slate-800 disabled:opacity-40"
+                                    className="flex-1 rounded-xl bg-slate-900 py-3 sm:py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-slate-800 disabled:opacity-40"
                                 >
                                     {submitting ? (
                                         <span className="flex items-center justify-center gap-2">

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged, signOut, type User } from "firebase/auth";
 import { useRouter } from "next/navigation";
@@ -20,6 +20,9 @@ import {
     UserCog,
     Users,
     X,
+    Home,
+    Plus,
+    Receipt,
 } from "lucide-react";
 
 type NavItem = {
@@ -67,36 +70,71 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (u) => {
-            setAuthLoading(false);
-            if (!u && pathname !== "/login") {
-                router.push("/login");
-            }
+        const unsubscribe = onAuthStateChanged(auth, (u) => {
             setUser(u);
+            setAuthLoading(false);
+        });
+        return () => unsubscribe();
+    }, []);
 
-            if (u) {
-                try {
-                    const me = await fetchJsonWithAuth<UserProfile>("/api/me");
-                    setUserRole(me.role || "viewer");
-                    setAllowedTabs(Array.isArray(me.allowed_tabs) ? me.allowed_tabs : []);
-                } catch {
-                    setUserRole("viewer");
-                    setAllowedTabs([]);
-                }
-            } else {
+    useEffect(() => {
+        if (!authLoading && !user && pathname !== "/login") {
+            router.push("/login");
+        }
+    }, [authLoading, pathname, router, user]);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        async function loadProfile() {
+            if (!user) {
+                setUserRole("viewer");
+                setAllowedTabs([]);
+                return;
+            }
+
+            try {
+                const me = await fetchJsonWithAuth<UserProfile>("/api/me");
+                if (cancelled) return;
+                setUserRole(me.role || "viewer");
+                setAllowedTabs(Array.isArray(me.allowed_tabs) ? me.allowed_tabs : []);
+            } catch {
+                if (cancelled) return;
                 setUserRole("viewer");
                 setAllowedTabs([]);
             }
-        });
-        return () => unsubscribe();
-    }, [router, pathname]);
+        }
 
-    const visibleNavItems = NAV_ITEMS.filter((item) => {
+        loadProfile();
+        return () => {
+            cancelled = true;
+        };
+    }, [user]);
+
+    const visibleNavItems = useMemo(() => NAV_ITEMS.filter((item) => {
         if (userRole === "admin") return true;
         if (!item.permission) return true;
         if (allowedTabs.length === 0) return item.permission === "dashboard";
         return allowedTabs.includes(item.permission);
-    });
+    }), [allowedTabs, userRole]);
+
+    useEffect(() => {
+        if (!user) return;
+
+        const routesToPrefetch = new Set<string>();
+        for (const item of visibleNavItems) {
+            routesToPrefetch.add(item.href);
+            if (item.children?.length) {
+                for (const child of item.children) {
+                    routesToPrefetch.add(child.href);
+                }
+            }
+        }
+
+        routesToPrefetch.forEach((href) => {
+            router.prefetch(href);
+        });
+    }, [router, user, visibleNavItems]);
 
     if (authLoading) {
         return (
@@ -305,9 +343,59 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </div>
             </header>
 
-            <main className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 sm:py-8">
+            <main className="mx-auto w-full max-w-[1440px] px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8 pb-24 lg:pb-8">
                 {children}
             </main>
+
+            {/* Mobile Bottom Navigation */}
+            <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 px-2 py-2 lg:hidden safe-area-inset-bottom">
+                <div className="flex items-center justify-around">
+                    <Link
+                        href="/"
+                        className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors ${pathname === '/' ? 'text-blue-600 bg-blue-50' : 'text-slate-500'}`}
+                    >
+                        <Home size={20} strokeWidth={pathname === '/' ? 2.5 : 2} />
+                        <span className="text-[10px] font-medium">Home</span>
+                    </Link>
+                    <Link
+                        href="/products"
+                        className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors ${pathname.startsWith('/products') ? 'text-blue-600 bg-blue-50' : 'text-slate-500'}`}
+                    >
+                        <Package size={20} strokeWidth={pathname.startsWith('/products') ? 2.5 : 2} />
+                        <span className="text-[10px] font-medium">Products</span>
+                    </Link>
+                    <Link
+                        href="/sales"
+                        className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors ${pathname.startsWith('/sales') ? 'text-blue-600 bg-blue-50' : 'text-slate-500'}`}
+                    >
+                        <Receipt size={20} strokeWidth={pathname.startsWith('/sales') ? 2.5 : 2} />
+                        <span className="text-[10px] font-medium">Sales</span>
+                    </Link>
+                    <Link
+                        href="/customers"
+                        className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors ${pathname.startsWith('/customers') ? 'text-blue-600 bg-blue-50' : 'text-slate-500'}`}
+                    >
+                        <Users size={20} strokeWidth={pathname.startsWith('/customers') ? 2.5 : 2} />
+                        <span className="text-[10px] font-medium">Customers</span>
+                    </Link>
+                    <button
+                        onClick={() => setMobileMenuOpen(true)}
+                        className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors ${mobileMenuOpen ? 'text-blue-600 bg-blue-50' : 'text-slate-500'}`}
+                    >
+                        <Menu size={20} />
+                        <span className="text-[10px] font-medium">More</span>
+                    </button>
+                </div>
+            </nav>
+
+            {/* Mobile FAB for Quick Actions */}
+            <button
+                onClick={() => router.push('/sales/new')}
+                className="fab-mobile bg-blue-600 text-white hover:bg-blue-700 lg:hidden"
+                aria-label="Create new sale"
+            >
+                <Plus size={24} />
+            </button>
         </div>
     );
 }

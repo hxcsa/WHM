@@ -1,22 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import {
     Package, Plus, Search, Filter, Warehouse,
     BarChart3, TrendingDown, ClipboardList, ArrowRightLeft,
     History, X, ChevronRight, Activity, Box, Database,
     Info, ExternalLink, Calendar, ShieldCheck, Loader2
 } from "lucide-react";
-import ItemForm from "@/components/ItemForm";
-import SaleForm from "@/components/SaleForm";
-import TransferForm from "@/components/TransferForm";
-import ReconciliationForm from "@/components/ReconciliationForm";
-import InventoryAnalytics from "@/components/InventoryAnalytics";
 import { useLanguage } from "@/contexts/LanguageContext";
 import React, { useCallback, memo } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { fetchWithAuth } from "@/lib/api";
+
+const ItemForm = dynamic(() => import("@/components/ItemForm"), { ssr: false });
+const SaleForm = dynamic(() => import("@/components/SaleForm"), { ssr: false });
+const TransferForm = dynamic(() => import("@/components/TransferForm"), { ssr: false });
+const ReconciliationForm = dynamic(() => import("@/components/ReconciliationForm"), { ssr: false });
+const InventoryAnalytics = dynamic(() => import("@/components/InventoryAnalytics"), { ssr: false });
 
 
 // Memoized Action Button

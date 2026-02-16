@@ -22,6 +22,8 @@ type Product = {
     sku?: string;
     selling_price?: string | number;
     current_wac?: string | number;
+    current_qty?: string | number;
+    cost_price?: string | number;
 };
 
 type LineItem = {
@@ -30,6 +32,8 @@ type LineItem = {
     quantity: number;
     price: number;
     discount: number;
+    available_stock?: number;
+    cost_price?: number;
 };
 
 const EMPTY_LINE: LineItem = {
@@ -69,6 +73,8 @@ export default function NewInvoicePage() {
         customer_id: "",
         customer_name: "",
         notes: "",
+        amount_paid: 0,
+        due_date: "",
     });
     const [lines, setLines] = useState<LineItem[]>([{ ...EMPTY_LINE }]);
     const [saving, setSaving] = useState(false);
@@ -172,6 +178,9 @@ export default function NewInvoicePage() {
 
     const selectProduct = (index: number, product: Product) => {
         const price = toNumber(product.selling_price) || toNumber(product.current_wac);
+        const cost_price = toNumber(product.cost_price) || toNumber(product.current_wac);
+        const available_stock = toNumber(product.current_qty);
+
         setLines((prev) => {
             const next = [...prev];
             next[index] = {
@@ -179,6 +188,8 @@ export default function NewInvoicePage() {
                 product_id: product.id,
                 product_name: product.name ?? "",
                 price,
+                cost_price,
+                available_stock,
             };
             return next;
         });
@@ -213,7 +224,8 @@ export default function NewInvoicePage() {
                 subtotal,
                 discount,
                 total_amount: total,
-                amount_paid: 0,
+                amount_paid: form.amount_paid,
+                due_date: form.due_date,
                 notes: form.notes,
                 status,
             };
@@ -227,7 +239,7 @@ export default function NewInvoicePage() {
                 throw new Error(body.detail || "Failed to create invoice.");
             }
 
-            router.push("/sales/invoices");
+            router.push("/sales");
         } catch (err) {
             const message = err instanceof Error ? err.message : "Unexpected error.";
             setError(message);
@@ -249,7 +261,7 @@ export default function NewInvoicePage() {
                         <p className="mt-1 text-sm font-medium text-[var(--ink-soft)]">Simple invoice creation without extra delivery fields.</p>
                     </div>
                     <button
-                        onClick={() => router.push("/sales/invoices")}
+                        onClick={() => router.push("/sales")}
                         className="flex h-10 w-10 items-center justify-center rounded-lg text-[var(--ink-soft)] hover:bg-[var(--bg-soft)]"
                     >
                         <X size={22} />
@@ -377,8 +389,32 @@ export default function NewInvoicePage() {
                                         <input type="number" min={0} value={line.price} onChange={(e) => updateLine(index, "price", Number(e.target.value))} className="enterprise-input" />
                                     </div>
                                     <div className="md:col-span-2">
-                                        <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-[var(--ink-soft)]">Discount</label>
-                                        <input type="number" min={0} value={line.discount} onChange={(e) => updateLine(index, "discount", Number(e.target.value))} className="enterprise-input" />
+                                        <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-[var(--ink-soft)]">
+                                            Discount
+                                        </label>
+                                        <input
+                                            type="number"
+                                            min={0}
+                                            value={line.discount}
+                                            onChange={(e) => updateLine(index, "discount", Number(e.target.value))}
+                                            className="enterprise-input"
+                                        />
+                                    </div>
+                                    <div className="md:col-span-12">
+                                        {line.product_id && (
+                                            <div className="flex flex-wrap items-center gap-4 pt-1">
+                                                {line.available_stock !== undefined && (
+                                                    <span className={`text-[10px] font-bold uppercase tracking-widest ${line.quantity > line.available_stock ? "text-[var(--danger)]" : "text-[var(--ink-soft)]"}`}>
+                                                        Stock: {line.available_stock} {line.quantity > line.available_stock && "(Insufficient)"}
+                                                    </span>
+                                                )}
+                                                {line.cost_price !== undefined && line.price < line.cost_price && (
+                                                    <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--danger)]">
+                                                        Price below cost ({formatIQD(line.cost_price)})
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="flex items-end justify-between md:col-span-1 md:flex-col md:justify-end">
                                         <p className="text-xs font-bold text-[var(--ink)]">{formatIQD(lineTotal)}</p>
@@ -389,6 +425,29 @@ export default function NewInvoicePage() {
                                 </div>
                             );
                         })}
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <label className="mb-1 block text-sm font-bold text-[var(--ink)]">Amount Paid (IQD)</label>
+                            <input
+                                type="number"
+                                min={0}
+                                value={form.amount_paid}
+                                onChange={(e) => setForm((prev) => ({ ...prev, amount_paid: Number(e.target.value) }))}
+                                className="enterprise-input"
+                                placeholder="0"
+                            />
+                        </div>
+                        <div>
+                            <label className="mb-1 block text-sm font-bold text-[var(--ink)]">Due Date</label>
+                            <input
+                                type="date"
+                                value={form.due_date}
+                                onChange={(e) => setForm((prev) => ({ ...prev, due_date: e.target.value }))}
+                                className="enterprise-input"
+                            />
+                        </div>
                     </div>
 
                     <div>
@@ -402,15 +461,45 @@ export default function NewInvoicePage() {
                         />
                     </div>
 
-                    <div className="rounded-xl border border-[var(--ink-thin)] bg-[var(--bg)] p-4">
-                        <div className="flex items-center justify-between text-sm"><span className="text-[var(--ink-soft)]">Subtotal</span><span className="font-semibold text-[var(--ink)]">{formatIQD(subtotal)}</span></div>
-                        <div className="mt-1 flex items-center justify-between text-sm"><span className="text-[var(--ink-soft)]">Discount</span><span className="font-semibold text-[var(--danger)]">-{formatIQD(discount)}</span></div>
-                        <div className="mt-2 border-t border-[var(--ink-thin)] pt-2 flex items-center justify-between"><span className="font-bold text-[var(--ink)]">Total</span><span className="text-lg font-black text-[var(--success)]">{formatIQD(total)}</span></div>
+                    <div className="rounded-2xl border-2 border-[var(--ink-thin)] bg-slate-50 p-6">
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between text-sm font-medium">
+                                <span className="text-[var(--ink-soft)]">Subtotal</span>
+                                <span className="text-[var(--ink)]">{formatIQD(subtotal)}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm font-medium">
+                                <span className="text-[var(--ink-soft)]">Total Discount</span>
+                                <span className="text-[var(--danger)]">-{formatIQD(discount)}</span>
+                            </div>
+                            <div className="border-t border-slate-200 pt-3">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-base font-black text-[var(--ink)]">Total Amount</span>
+                                    <span className="text-2xl font-black text-[var(--ink)]">{formatIQD(total)}</span>
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-between pt-1">
+                                <span className="text-sm font-bold text-[var(--ink-soft)]">Remaining Balance</span>
+                                <span className="text-lg font-bold text-[var(--danger)]">
+                                    {formatIQD(Math.max(0, total - form.amount_paid))}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="mt-4 flex items-center gap-2">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-[var(--ink-soft)]">Payment Status:</span>
+                            {form.amount_paid >= total && total > 0 ? (
+                                <span className="rounded-full bg-[var(--success-thin)] px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-[var(--success)]">Full Payment</span>
+                            ) : form.amount_paid > 0 ? (
+                                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-amber-600">Partial Payment</span>
+                            ) : (
+                                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-slate-500">Unpaid</span>
+                            )}
+                        </div>
                     </div>
 
                     <div className="flex flex-wrap justify-end gap-2 pt-2">
                         <button
-                            onClick={() => router.push("/sales/invoices")}
+                            onClick={() => router.push("/sales")}
                             className="rounded-xl border-2 border-[var(--ink-thin)] px-4 py-2 text-sm font-bold text-[var(--ink)] hover:bg-[var(--bg-soft)]"
                         >
                             Cancel

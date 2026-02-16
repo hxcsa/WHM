@@ -1065,13 +1065,16 @@ def update_product(product_id: str, data: dict, user: dict = Depends(get_current
     return {"id": product_id, **update_fields}
 
 
-@router.delete("/products/{product_id}")
+@router.delete("/items/{product_id}")
 def delete_product(product_id: str, user: dict = Depends(get_current_user)):
-    """Delete a product (only if no stock)."""
+    """Delete a product if it has no stock."""
     db = get_db()
+    
+    # Check if product is used in any transactions or has stock
+    # For now, just check stock
     doc_ref = db.collection("items").document(product_id)
     doc = doc_ref.get()
-
+    
     if not doc.exists:
         raise HTTPException(status_code=404, detail="Product not found")
 
@@ -1086,6 +1089,7 @@ def delete_product(product_id: str, user: dict = Depends(get_current_user)):
 
     doc_ref.delete()
     return {"status": "deleted", "id": product_id}
+
 
 
 @router.post("/products/{product_id}/adjust-stock")
@@ -1782,10 +1786,39 @@ def create_invoice(data: dict, user: dict = Depends(get_current_user)):
         elif effective_paid > 0:
             payment_status = "partial"
 
+        # Auto-generate invoice number if not provided
+        invoice_number = data.get("invoice_number")
+        if not invoice_number:
+            counter_ref = db.collection("counters").document(f"invoice_{company_id}")
+            try:
+                # Use a transaction to safely increment the counter
+                @firestore.transactional
+                def get_next_invoice_number(transaction, counter_ref):
+                    snapshot = transaction.get(counter_ref)
+                    if not snapshot.exists:
+                        new_count = 1
+                        transaction.set(counter_ref, {"count": new_count})
+                    else:
+                        new_count = snapshot.get("count") + 1
+                        transaction.update(counter_ref, {"count": new_count})
+                    return new_count
+
+                transaction = db.transaction()
+                next_count = get_next_invoice_number(transaction, counter_ref)
+                invoice_number = f"INV-{next_count:05d}"
+            except Exception as e:
+                print(f"Error generating invoice number: {e}")
+                # Fallback to timestamp if transaction fails
+                invoice_number = f"INV-{int(datetime.now().timestamp())}"
+
+        # Store creator info
+        creator_role = user.get("role", "staff").capitalize()
+        created_by_display = "Admin" if user.get("role") == "admin" else creator_role
+
         # Create invoice
         invoice_data = {
             "company_id": company_id,
-            "invoice_number": data.get("invoice_number"),
+            "invoice_number": invoice_number,
             "customer_id": data.get("customer_id"),
             "customer_name": data.get("customer_name"),
             "customer_phone": data.get("customer_phone", ""),
@@ -1805,7 +1838,8 @@ def create_invoice(data: dict, user: dict = Depends(get_current_user)):
             else data.get("status", "issued"),
             "issue_date": data.get("issue_date") or datetime.now().isoformat(),
             "due_date": data.get("due_date"),
-            "created_by": user.get("uid"),
+            "created_by": created_by_display,
+            "created_by_uid": user.get("uid"),
             "created_at": firestore.SERVER_TIMESTAMP,
         }
 
@@ -1890,6 +1924,188 @@ def get_invoice(invoice_id: str, user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=404, detail="Invoice not found")
 
     return {"id": doc.id, **doc.to_dict()}
+
+
+@router.post("/sales/invoices/{invoice_id}/pay")
+def add_payment(
+    invoice_id: str,
+    amount: float,
+    user: dict = Depends(get_current_user),
+):
+    """Add a payment to an existing invoice."""
+    db = get_db()
+    company_id = user.get("company_id")
+
+    invoice_ref = db.collection("invoices").document(invoice_id)
+
+    try:
+        # Direct read (no transaction — avoids generator bug)
+        invoice_doc = invoice_ref.get()
+        if not invoice_doc.exists:
+            raise HTTPException(status_code=404, detail="Invoice not found")
+
+        invoice_data = invoice_doc.to_dict()
+        if invoice_data.get("company_id") != company_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+
+        current_paid = Decimal(str(invoice_data.get("amount_paid", 0)))
+        total_amount = Decimal(str(invoice_data.get("total_amount", 0)))
+        payment_amount = Decimal(f"{amount:.2f}")
+
+        new_paid = current_paid + payment_amount
+
+        # Prevent overpayment
+        if new_paid > (total_amount + Decimal("0.01")):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Payment exceeds balance. Remaining: {total_amount - current_paid}"
+            )
+
+        payment_status = "unpaid"
+        if new_paid >= (total_amount - Decimal("0.01")):
+            payment_status = "paid"
+            new_paid = total_amount
+        elif new_paid > 0:
+            payment_status = "partial"
+
+        # Update invoice
+        invoice_ref.update({
+            "amount_paid": str(new_paid),
+            "payment_status": payment_status,
+            "status": "closed" if payment_status == "paid" else invoice_data.get("status", "issued"),
+            "updated_at": firestore.SERVER_TIMESTAMP
+        })
+
+        # Record payment for audit trail
+        db.collection("payments").document().set({
+            "invoice_id": invoice_id,
+            "company_id": company_id,
+            "amount": str(payment_amount),
+            "created_by": user.get("uid"),
+            "created_at": firestore.SERVER_TIMESTAMP
+        })
+
+        return {"message": "Payment added successfully"}
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Payment failed: {str(e)}")
+
+
+@router.get("/sales/invoices/{invoice_id}/pdf")
+def get_invoice_pdf(invoice_id: str):
+    """Return a print-friendly HTML view of the invoice."""
+    db = get_db()
+    doc = db.collection("invoices").document(invoice_id).get()
+
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+
+    inv = doc.to_dict()
+    items_html = ""
+    for item in inv.get("items", []):
+        items_html += f"""
+        <tr>
+            <td style="padding: 12px; border-bottom: 1px solid #eee;">{item.get('product_name')}</td>
+            <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: right;">{item.get('quantity')}</td>
+            <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: right;">{int(float(item.get('price', 0))):,} IQD</td>
+            <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: right; font-weight: bold;">{int(float(item.get('total', 0))):,} IQD</td>
+        </tr>
+        """
+
+    total = float(inv.get("total_amount", 0))
+    paid = float(inv.get("amount_paid", 0))
+    remaining = total - paid
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Invoice {inv.get('invoice_number')}</title>
+        <style>
+            body {{ font-family: 'Inter', system-ui, sans-serif; color: #1e293b; line-height: 1.5; padding: 40px; max-width: 800px; margin: auto; }}
+            .header {{ display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; }}
+            .logo {{ font-size: 24px; font-weight: 900; color: #0f172a; letter-spacing: -0.025em; }}
+            .invoice-info {{ text-align: right; }}
+            .invoice-info h1 {{ margin: 0; font-size: 32px; font-weight: 900; }}
+            .details {{ display: grid; grid-template-cols: 1fr 1fr; gap: 40px; margin-bottom: 40px; }}
+            .section-title {{ font-size: 12px; font-weight: 900; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; margin-bottom: 8px; }}
+            table {{ width: 100%; border-collapse: collapse; margin-bottom: 40px; }}
+            th {{ text-align: left; font-size: 12px; font-weight: 900; text-transform: uppercase; color: #64748b; padding: 12px; border-bottom: 2px solid #e2e8f0; }}
+            .totals {{ margin-left: auto; width: 300px; }}
+            .total-row {{ display: flex; justify-content: space-between; padding: 8px 0; }}
+            .total-row.grand-total {{ font-size: 20px; font-weight: 900; border-top: 2px solid #e2e8f0; margin-top: 12px; padding-top: 12px; }}
+            @media print {{ .no-print {{ display: none; }} body {{ padding: 0; }} }}
+        </style>
+    </head>
+    <body onload="window.print()">
+        <div class="header">
+            <div class="logo">OPENGATE ERP</div>
+            <div class="invoice-info">
+                <h1>INVOICE</h1>
+                <p style="font-weight: bold; color: #64748b;">#{inv.get('invoice_number')}</p>
+            </div>
+        </div>
+
+        <div class="details">
+            <div>
+                <div class="section-title">Bill To</div>
+                <p style="font-weight: bold; font-size: 18px; margin: 0;">{inv.get('customer_name')}</p>
+                <p style="margin: 4px 0; color: #64748b;">{inv.get('customer_phone', '')}</p>
+            </div>
+            <div style="text-align: right;">
+                <div class="section-title">Invoice Details</div>
+                <p style="margin: 4px 0;"><strong>Date:</strong> {inv.get('issue_date')}</p>
+                <p style="margin: 4px 0;"><strong>Status:</strong> {inv.get('status').upper()}</p>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Item Description</th>
+                    <th style="text-align: right;">Qty</th>
+                    <th style="text-align: right;">Price</th>
+                    <th style="text-align: right;">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {items_html}
+            </tbody>
+        </table>
+
+        <div class="totals">
+            <div class="total-row">
+                <span>Subtotal</span>
+                <span style="font-weight: bold;">{int(float(inv.get('subtotal', 0))):,} IQD</span>
+            </div>
+            <div class="total-row">
+                <span>Discount</span>
+                <span style="font-weight: bold; color: #10b981;">-{int(float(inv.get('discount', 0))):,} IQD</span>
+            </div>
+            <div class="total-row grand-total">
+                <span>Total</span>
+                <span>{int(total):,} IQD</span>
+            </div>
+            <div class="total-row" style="color: #10b981; font-weight: bold;">
+                <span>Amount Paid</span>
+                <span>{int(paid):,} IQD</span>
+            </div>
+            <div class="total-row" style="color: #f59e0b; font-weight: bold;">
+                <span>Balance Due</span>
+                <span>{int(remaining):,} IQD</span>
+            </div>
+        </div>
+
+        <div style="margin-top: 80px; text-align: center; color: #94a3b8; font-size: 12px;">
+            Thank you for your business!
+        </div>
+    </body>
+    </html>
+    """
+    from fastapi.responses import HTMLResponse
+    return HTMLResponse(content=html_content)
 
 
 @router.post("/sales/invoices/{invoice_id}/return")
